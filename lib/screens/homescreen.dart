@@ -22,6 +22,9 @@ class _HomeScreenState extends State<HomeScreen> {
   List topratedMovies = [];
   List tv = [];
 
+  bool startRecord = false;
+
+
   @override
   void initState() {
     super.initState();
@@ -112,8 +115,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => ShowScreen(
-                    Movies: popularTVShows,
-                    type: "TV Shows",
+                    Movies: popularMovies,
+                    type: "Movies",
                   ),
                 ),
               );

@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'package:avatar_glow/avatar_glow.dart';
 import 'package:bingr/screens/moviescreen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:speech_to_text/speech_to_text.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -12,18 +14,26 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  final query = "";
+  String query = "a";
   List<dynamic> Movies = [];
   TextEditingController _query = TextEditingController();
   @override
   void initState() {
     super.initState();
+    make();
     load("cars");
+  }
+
+  make() async {
+    isAvailable = await speech.initialize();
+    print(isAvailable);
+    setState(() {});
   }
 
   void load(String search_key) async {
     await http
-        .get(Uri.parse("https://www.omdbapi.com/?apikey=6162b991&s=${search_key}"))
+        .get(Uri.parse(
+            "https://www.omdbapi.com/?apikey=6162b991&s=${search_key}"))
         .then((value) {
       var result = jsonDecode(value.body);
       // print(result);
@@ -34,6 +44,10 @@ class _SearchScreenState extends State<SearchScreen> {
     });
   }
 
+  bool startRecord = false;
+  final SpeechToText speech = SpeechToText();
+  bool isAvailable = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -41,7 +55,9 @@ class _SearchScreenState extends State<SearchScreen> {
         padding: const EdgeInsets.all(8.0),
         child: Column(
           children: [
-            SizedBox(height: 15,),
+            SizedBox(
+              height: 15,
+            ),
             TextField(
               controller: _query,
               onChanged: (value) {
@@ -49,6 +65,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 print('Searching for: $value');
               },
               onSubmitted: (value) {
+                query = '';
                 setState(() {
                   Movies = [];
                 });
@@ -59,16 +76,50 @@ class _SearchScreenState extends State<SearchScreen> {
               decoration: InputDecoration(
                 hintText: 'Search for any movie, series or episode...',
                 prefixIcon: const Icon(Icons.search, color: Colors.green),
-                suffixIcon: _query.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear, color: Colors.red,),
-                        onPressed: () {
-                          _query.clear();
-                          // Handle clearing input
-                          print('Search field cleared');
-                        },
-                      )
-                    : null,
+                suffixIcon: AvatarGlow(
+                  glowColor: Colors.red,
+                  animate: startRecord,
+                  child: GestureDetector(
+                    onTapDown: (value) {
+                      setState(() {
+                        startRecord = !startRecord; // Toggle recording state
+                      });
+                      if (startRecord && isAvailable) {
+                        // Start listening
+                        speech.listen(
+                          onResult: (value) {
+                            setState(() {
+                              query = value.recognizedWords;
+                              print('Recognized query: $query');
+                            });
+                          },
+                          listenFor: Duration(
+                              minutes: 1), // Max duration to prevent auto-stop
+                          pauseFor:
+                              Duration(seconds: 10), // Adjust pause threshold
+                          partialResults:
+                              true, // Capture partial results for real-time updates
+                        );
+                      } else {
+                        // Stop listening
+                        speech.stop();
+                        Movies = [];
+                        load(query); // Trigger search with the recognized query
+                      }
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: Icon(
+                        Icons.mic,
+                        color: startRecord
+                            ? Colors.red
+                            : Colors.black, // Visual feedback
+                      ),
+                    ),
+                  ),
+                ),
                 filled: true,
                 fillColor: Colors.grey[200], // Light background for modern UI
                 contentPadding:
@@ -82,72 +133,94 @@ class _SearchScreenState extends State<SearchScreen> {
               textInputAction: TextInputAction
                   .search, // Adds "Search" button on the keyboard
             ),
-            SizedBox(height: 15,),
-            Movies.isEmpty ? Center(child: CircularProgressIndicator(),) :
-            Expanded(
-              child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3, // 3 columns
-                  crossAxisSpacing: 8,
-                  mainAxisSpacing: 8,
-                  childAspectRatio: 0.55, // Adjust ratio for better grid
-                ),
-                itemCount: Movies.length,
-                itemBuilder: (context, index) {
-                  var movie = Movies[index];
-                  return InkWell(
-                    onTap: () {
-                      // Action when a movie is tapped
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => MovieScreen(imdbId: movie['imdbID'])));
-                      print('Tapped on ${movie['Title']}');
-                    },
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Poster Container
-                        Container(
-                          height: 180,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black26,
-                                blurRadius: 4,
-                                offset: Offset(0, 2),
+            SizedBox(
+              height: 15,
+            ),
+            if (query != '')
+              Text(
+                query,
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 25,
+                    fontWeight: FontWeight.bold),
+              ),
+            SizedBox(
+              height: 15,
+            ),
+            Movies.isEmpty
+                ? Center(
+                    child: CircularProgressIndicator(),
+                  )
+                : Expanded(
+                    child: GridView.builder(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3, // 3 columns
+                        crossAxisSpacing: 8,
+                        mainAxisSpacing: 8,
+                        childAspectRatio: 0.55, // Adjust ratio for better grid
+                      ),
+                      itemCount: Movies.length,
+                      itemBuilder: (context, index) {
+                        var movie = Movies[index];
+                        return InkWell(
+                          onTap: () {
+                            // Action when a movie is tapped
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        MovieScreen(imdbId: movie['imdbID'])));
+                            print('Tapped on ${movie['Title']}');
+                          },
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Poster Container
+                              Container(
+                                height: 180,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black26,
+                                      blurRadius: 4,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
+                                  image: movie['Poster'] != null &&
+                                          movie['Poster']!.isNotEmpty
+                                      ? DecorationImage(
+                                          image: NetworkImage(movie['Poster']!),
+                                          fit: BoxFit.cover,
+                                        )
+                                      : const DecorationImage(
+                                          image: AssetImage(
+                                              'assets/placeholder.png'),
+                                          fit: BoxFit.cover,
+                                        ),
+                                  color: Colors.grey[300],
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              // Movie Title
+                              Text(
+                                movie['Title'] ?? 'No Title',
+                                style: GoogleFonts.lato(
+                                  textStyle: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                maxLines: 2, // Avoid overflow
                               ),
                             ],
-                            image: movie['Poster'] != null &&
-                                    movie['Poster']!.isNotEmpty
-                                ? DecorationImage(
-                                    image: NetworkImage(movie['Poster']!),
-                                    fit: BoxFit.cover,
-                                  )
-                                : const DecorationImage(
-                                    image: AssetImage('assets/placeholder.png'),
-                                    fit: BoxFit.cover,
-                                  ),
-                            color: Colors.grey[300],
                           ),
-                        ),
-                        const SizedBox(height: 6),
-                        // Movie Title
-                        Text(
-                          movie['Title'] ?? 'No Title',
-                          style: GoogleFonts.lato(
-                            textStyle: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          maxLines: 2, // Avoid overflow
-                        ),
-                      ],
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
-            ),
+                  ),
           ],
         ),
       ),
