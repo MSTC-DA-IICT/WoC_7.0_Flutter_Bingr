@@ -14,7 +14,7 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  String query = "a";
+  String query = "";
   List<dynamic> Movies = [];
   TextEditingController _query = TextEditingController();
   @override

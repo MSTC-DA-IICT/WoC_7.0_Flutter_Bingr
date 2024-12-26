@@ -157,17 +157,7 @@ class _MainAppState extends State<MainApp> {
                           );
                         },
                       ),
-                      ListTile(
-                        leading: Icon(Icons.star, color: Colors.yellowAccent),
-                        title: Text(
-                          "Trending Now",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        onTap: () {
-                          // Navigate to Trending screen
-                          Navigator.pop(context);
-                        },
-                      ),
+                      
                       ListTile(
                         leading: Icon(Icons.favorite, color: Colors.pinkAccent),
                         title: Text(

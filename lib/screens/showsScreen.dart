@@ -94,27 +94,7 @@ class _ShowScreenState extends State<ShowScreen> {
                                 ),
                               ],
                             ),
-                            Positioned(
-                              bottom: 55,
-                              right: 5,
-                              child: Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: Colors
-                                      .black54, // Semi-transparent background
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                
-                                child: IconButton(onPressed: (){
-                                  
-                                }, icon: Icon(
-                                
-                                  Icons.add,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),)
-                              ),
-                            )
+                            
                           ]),
                         );
                       },

@@ -6,6 +6,7 @@ import 'package:bingr/utils/wishlist.dart';
 import 'package:bingr/utils/wishlistmanager.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 
 class MovieScreen extends StatefulWidget {
   final imdbId;
@@ -68,6 +69,11 @@ class _MovieScreenState extends State<MovieScreen> {
       _isInWishlist = !_isInWishlist;
     });
   }
+  Future<void> _launchUrl(String url) async {
+  if (!await launchUrl(Uri.parse(url))) {
+    throw Exception('Something went wrong');
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -80,15 +86,28 @@ class _MovieScreenState extends State<MovieScreen> {
               title: Text(movieData['Title']),
               centerTitle: true,
             ),
-            floatingActionButton: TextButton(
-              onPressed: _toggleWishlist,
-              child: Text(
-                _isInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist',
-                style: TextStyle(color: Colors.black, fontSize: 15),
-              ),
-              style: ButtonStyle(
-                  backgroundColor:
-                      MaterialStateProperty.all<Color>(Colors.green.shade700)),
+            floatingActionButton: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: _toggleWishlist,
+                  child: Text(
+                    _isInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist',
+                    style: TextStyle(color: Colors.black, fontSize: 15),
+                  ),
+                  style: ButtonStyle(
+                      backgroundColor:
+                          MaterialStateProperty.all<Color>(Colors.green.shade700)),
+                ),
+                TextButton(child: Text("Watch Trailer", style: TextStyle(color: Colors.black),), onPressed: ()async{
+                  _launchUrl('https://www.imdb.com/title/${widget.imdbId}');
+                },
+                style: ButtonStyle(
+                      padding: MaterialStateProperty.all<EdgeInsetsGeometry>(EdgeInsets.symmetric(horizontal: 45)),
+                      backgroundColor:
+                          MaterialStateProperty.all<Color>(Colors.green.shade700)),
+                )
+              ],
             ),
             body: SingleChildScrollView(
               child: Column(

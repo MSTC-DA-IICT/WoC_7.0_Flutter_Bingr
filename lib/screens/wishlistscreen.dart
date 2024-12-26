@@ -1,4 +1,5 @@
 import 'package:bingr/main.dart';
+import 'package:bingr/screens/moviescreen.dart';
 import 'package:bingr/utils/wishlist.dart';
 import 'package:bingr/utils/wishlistmanager.dart';
 import 'package:flutter/material.dart';
@@ -46,16 +47,26 @@ class _WishlistScreenState extends State<WishlistScreen> {
               itemBuilder: (context, index) {
                 final item = _wishlist[index];
                 return Card(
-                  child: ListTile(
-                    leading: Image.network(item.poster),
-                    title: Text(item.title),
-                    subtitle: Text(item.type),
-                    trailing: IconButton(
-                      icon: Icon(Icons.delete, color: Colors.red,),
-                      onPressed: () async {
-                        await _wishlistManager.removeFromWishlist(item.id);
-                        _loadWishlist();
-                      },
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MovieScreen(imdbId: item.id),
+                        ),
+                      );
+                    },
+                    child: ListTile(
+                      leading: Image.network(item.poster),
+                      title: Text(item.title),
+                      subtitle: Text(item.type),
+                      trailing: IconButton(
+                        icon: Icon(Icons.delete, color: Colors.red,),
+                        onPressed: () async {
+                          await _wishlistManager.removeFromWishlist(item.id);
+                          _loadWishlist();
+                        },
+                      ),
                     ),
                   ),
                 );

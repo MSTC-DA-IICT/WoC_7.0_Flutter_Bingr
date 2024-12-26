@@ -55,14 +55,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       borderRadius: BorderRadius.circular(60),
                     ),
                     child: Center(
-                      child: Text(
-                        "LOGO",
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
-                      ),
+                      child: Image(image: AssetImage('assets/icon.jpg')),
                     ),
                   ),
 
